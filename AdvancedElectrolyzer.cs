@@ -3,6 +3,7 @@ using Klei.AI;
 using KSerialization;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 
@@ -10,8 +11,13 @@ namespace TagnumElite_AdvancedElectrolyzer
 {
 
     [SerializationConfig(MemberSerialization.OptIn)]
-    public class AdvancedElectrolyzer : StateMachineComponent<Electrolyzer.StatesInstance>
+    public class AdvancedElectrolyzer : StateMachineComponent<AdvancedElectrolyzer.StatesInstance>, ISecondaryOutput
     {
+        [Conditional("DEBUG")]
+        private static void debug(object obj)
+        {
+            Debug.Log("[Advanced Electrolyzer] " + obj);
+        }
 
         public class StatesInstance : GameStateMachine<States, StatesInstance, AdvancedElectrolyzer, object>.GameInstance
         {
@@ -21,7 +27,8 @@ namespace TagnumElite_AdvancedElectrolyzer
 
             public void AddStatusItems()
             {
-                base.master.GetComponent<KSelectable>().AddStatusItem(ElementConverterInput, new object());
+                Guid item = base.master.GetComponent<KSelectable>().AddStatusItem(ElementConverterInput, new object());
+                statusItemEntries.Add(item);
             }
 
             public void RemoveStatusItems()
@@ -33,8 +40,6 @@ namespace TagnumElite_AdvancedElectrolyzer
                 statusItemEntries.Clear();
 
             }
-
-
         }
 
         public class States : GameStateMachine<States, StatesInstance, AdvancedElectrolyzer>
@@ -47,43 +52,54 @@ namespace TagnumElite_AdvancedElectrolyzer
             public override void InitializeStates(out BaseState default_state)
             {
                 default_state = disabled;
+                debug("Initialization States");
 
                 //First we transition from root to disabled if not IsOperational. Then on OnStorageChange update the meter
                 root.EventTransition(GameHashes.OperationalChanged, disabled, (StatesInstance smi) => !smi.master.operational.IsOperational).EventHandler(GameHashes.OnStorageChange, delegate (StatesInstance smi)
                 {
+                    debug("Update Meter");
                     smi.master.UpdateMeter();
                 });
 
                 //Transition from disabled to waiting if operational or IsActive
-                disabled.EventTransition(GameHashes.OperationalChanged, waiting, (StatesInstance smi) => smi.master.operational == null || smi.master.operational.IsActive);
+                disabled.Enter("Disabled", delegate (StatesInstance smi) {
+                    debug("Disabled");
+                }).EventTransition(GameHashes.OperationalChanged, waiting, (StatesInstance smi) => smi.master.operational.IsOperational);
 
                 waiting.Enter("Waiting", delegate (StatesInstance smi)
                 {
-                    smi.master.operational.SetActive(value: false);
+                    debug("Waiting");
+                    smi.master.operational.SetActive(false);
                 }).EventTransition(GameHashes.OnStorageChange, converting, (StatesInstance smi) => smi.master.HasEnoughMass());
 
                 //When we enter into converting status, add status items
                 converting.Enter("Ready", delegate (StatesInstance smi)
                 {
+                    debug("Converting Enter");
                     smi.AddStatusItems();
-                    smi.master.operational.SetActive(value: true);
+                    smi.master.operational.SetActive(true);
                     // Then once we exit, remove status items
                 }).Exit("RemoveStatusItems", delegate (StatesInstance smi)
                 {
+                    debug("Converting Exit");
                     smi.RemoveStatusItems();
                     // Transition into disabled if not operation or IsActive
-                }).EventTransition(GameHashes.ActiveChanged, disabled, (StatesInstance smi) => smi.master.operational != null && !smi.master.operational.IsActive)
+                })
                 .Transition(waiting, (StatesInstance smi) => !smi.master.CanConvertAtAll())
                 .Transition(blocked, (StatesInstance smi) => !smi.master.RoomForPressure)
+                //.EventTransition(GameHashes.OperationalChanged, disabled, (StatesInstance smi) => smi.master.operational != null && !smi.master.operational.IsActive)
                 .Update("ConvertMass", delegate (StatesInstance smi, float dt)
                 {
+                    debug("Convert Mass");
                     smi.master.ConvertMass();
                 }, UpdateRate.SIM_1000ms, load_balance: true);
 
                 blocked.Enter("Blocked", delegate (StatesInstance smi)
                 {
-                    smi.master.operational.SetActive(value: false);
-                }).ToggleStatusItem(Db.Get().BuildingStatusItems.OutputPipeFull).Transition(converting, (StatesInstance smi) => smi.master.RoomForPressure);
+                    debug("Blocked");
+                    smi.master.operational.SetActive(false);
+                }).ToggleStatusItem(Db.Get().BuildingStatusItems.GasVentObstructed).Transition(converting, (StatesInstance smi) => smi.master.RoomForPressure);
+                debug("Initialized States");
             }
         }
 

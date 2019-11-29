@@ -7,7 +7,7 @@ namespace TagnumElite_AdvancedElectrolyzer
     public class AdvancedElectrolyzerConfig : IBuildingConfig
     {
         //Woops, typo. Can't fix this because save game compatibility.
-        public const string ID = "AdvacnedElectrolyzer"; 
+        public const string ID = "AdvacnedElectrolyzer";
 
         private readonly ConduitPortInfo secondaryPort = new ConduitPortInfo(ConduitType.Gas, new CellOffset(0, 1));
 
@@ -106,7 +106,6 @@ namespace TagnumElite_AdvancedElectrolyzer
 
         public override void DoPostConfigureComplete(GameObject go)
         {
-            BuildingTemplates.DoPostConfigure(go);
             GeneratedBuildings.RegisterLogicPorts(go, LogicOperationalController.INPUT_PORTS_1_1);
             go.AddOrGet<LogicOperationalController>();
             go.AddOrGetDef<PoweredActiveController.Def>();

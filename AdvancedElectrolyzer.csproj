@@ -7,7 +7,7 @@
     <ProjectGuid>{E50DEA73-704D-44BA-A4C3-C43E91B71C8B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AdvancedElectrolyzer</RootNamespace>
+    <RootNamespace>TagnumElite_AdvancedElectrolyzer</RootNamespace>
     <AssemblyName>AdvancedElectrolyzer</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\Mods\AdvancedElectrolyzer\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
