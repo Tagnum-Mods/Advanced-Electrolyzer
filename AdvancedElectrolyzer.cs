@@ -27,8 +27,9 @@ namespace TagnumElite_AdvancedElectrolyzer
 
             public void AddStatusItems()
             {
-                Guid item = base.master.GetComponent<KSelectable>().AddStatusItem(ElementConverterInput, new object());
-                statusItemEntries.Add(item);
+                statusItemEntries.Add(base.master.GetComponent<KSelectable>().AddStatusItem(ElementConverterInput));
+                statusItemEntries.Add(base.master.GetComponent<KSelectable>().AddStatusItem(ElementConverterOutput, GameTags.Oxygen));
+                statusItemEntries.Add(base.master.GetComponent<KSelectable>().AddStatusItem(ElementConverterOutput, GameTags.Hydrogen));
             }
 
             public void RemoveStatusItems()
@@ -38,7 +39,6 @@ namespace TagnumElite_AdvancedElectrolyzer
                     base.master.GetComponent<KSelectable>().RemoveStatusItem(statusItemEntry);
                 }
                 statusItemEntries.Clear();
-
             }
         }
 
@@ -98,7 +98,7 @@ namespace TagnumElite_AdvancedElectrolyzer
                 {
                     debug("Blocked");
                     smi.master.operational.SetActive(false);
-                }).ToggleStatusItem(Db.Get().BuildingStatusItems.GasVentObstructed).Transition(converting, (StatesInstance smi) => smi.master.RoomForPressure);
+                }).Transition(converting, (StatesInstance smi) => smi.master.RoomForPressure);
                 debug("Initialized States");
             }
         }
@@ -111,20 +111,19 @@ namespace TagnumElite_AdvancedElectrolyzer
 
             if (ElementConverterInput == null)
             {
-                ElementConverterInput = new StatusItem("ElementConverterInput", "BUILDING", string.Empty, StatusItem.IconType.Info, NotificationType.Neutral, allow_multiples: true, OverlayModes.None.ID).SetResolveStringCallback(delegate (string str, object data)
+                ElementConverterInput = new StatusItem("ADVANCEDELECTROLYZERINPUT", "BUILDING", string.Empty, StatusItem.IconType.Info, NotificationType.Neutral, allow_multiples: false, OverlayModes.None.ID).SetResolveStringCallback(delegate (string str, object data)
                 {
-                    str = str.Replace("{ElementTypes}", "Test eLemnet");
-                    str = str.Replace("{FlowRate}", "Test Flow Rate");
-                    return str;
+                    return str.Replace("{FlowRate}", "" + Config.waterConsumptionRate * 1000 + "kg/s");
                 });
             }
 
             if (ElementConverterOutput == null)
             {
-                ElementConverterOutput = new StatusItem("ElementConverterOutput", "BUILDING", string.Empty, StatusItem.IconType.Info, NotificationType.Neutral, allow_multiples: true, OverlayModes.None.ID).SetResolveStringCallback(delegate (string str, object data)
+                ElementConverterOutput = new StatusItem("ADVANCEDELECTROLYZEROUTPUT", "BUILDING", string.Empty, StatusItem.IconType.Info, NotificationType.Neutral, allow_multiples: true, OverlayModes.None.ID).SetResolveStringCallback(delegate (string str, object data)
                 {
-                    str = str.Replace("{ElementTypes}", "Test eLemnet");
-                    str = str.Replace("{FlowRate}", "Test Flow Rate");
+                    Tag tag = (Tag)data;
+                    str = str.Replace("{ElementType}", tag == GameTags.Oxygen ? "Oxygen" : "Hydrogen");
+                    str = str.Replace("{FlowRate}", ""+(tag == GameTags.Oxygen ? Config.water2OxygenRatio : Config.water2HydrogenRatio)* 1000 + "kg/s");
                     return str;
                 });
             }
@@ -201,7 +200,7 @@ namespace TagnumElite_AdvancedElectrolyzer
 
         private float GetSpeedMultiplier()
         {
-            return machinerySpeedAttribute.GetTotalValue();
+            return machinerySpeedAttribute.GetTotalValue() * Config.workSpeedMultiplier;
         }
 
         public void UpdateMeter()
@@ -232,8 +231,7 @@ namespace TagnumElite_AdvancedElectrolyzer
 
         public bool HasEnoughMass()
         {
-            float speedMultiplier = GetSpeedMultiplier();
-            float speedMultiplierPercentage = 1f * speedMultiplier;
+            float speedMultiplierPercentage = 1f * GetSpeedMultiplier();
             bool result = true;
             List<GameObject> items = storage.items;
             float totalMass = 0f;
@@ -254,8 +252,7 @@ namespace TagnumElite_AdvancedElectrolyzer
 
         private void ConvertMass()
         {
-            float speedMultiplier = GetSpeedMultiplier();
-            float speedMultiplierPercentage = 1f * speedMultiplier;
+            float speedMultiplierPercentage = 1f * GetSpeedMultiplier();
             float totalConsumptionAmount = 1f;
             float waterConsumptionRate = Config.waterConsumptionRate * speedMultiplierPercentage * totalConsumptionAmount;
             for (int i = 0; i < storage.items.Count; i++)

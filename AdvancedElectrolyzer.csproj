@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\Mods\AdvancedElectrolyzer\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -340,14 +340,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>..\..\lib\pdb2mdb.exe" "$(TargetDir)$(TargetFileName)"
-
+    <PostBuildEvent>if $(ConfigurationName) == Debug ..\..\lib\pdb2mdb.exe" "$(TargetDir)$(TargetFileName)"
 
 rd /s /q "D:\Online Storage\OneDrive\Documents\Klei\OxygenNotIncluded\mods\dev\$(ProjectName)"
 
-xcopy "$(TargetDir.TrimEnd('\'))" "D:\Online Storage\OneDrive\Documents\Klei\OxygenNotIncluded\mods\dev\$(ProjectName)" /Y /S /E /I</PostBuildEvent>
+</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>rd /s /q "$(TargetDir)"</PreBuildEvent>
+    <PreBuildEvent>rd /S /Q "$(TargetDir)"</PreBuildEvent>
   </PropertyGroup>
 </Project>

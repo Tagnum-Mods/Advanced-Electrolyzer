@@ -34,6 +34,8 @@ namespace TagnumElite_AdvancedElectrolyzer
             public float heatSelf = 4f;
             [JsonProperty("Energy Consumption")]
             public float energyConsumption = 400f;
+            [JsonProperty("Work Speed Multiplier")]
+            public float workSpeedMultiplier = 1f;
         }
 
         public override BuildingDef CreateBuildingDef()

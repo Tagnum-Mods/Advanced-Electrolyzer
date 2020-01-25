@@ -54,8 +54,6 @@ namespace TagnumElite_AdvancedElectrolyzer
     {
         public static void Prefix()
         {
-            //Debug.Log(" === GeneratedBuildings Prefix === " + AdvancedElectrolyzerConfig.ID);
-
             string prefix = "STRINGS.BUILDINGS.PREFABS." + AdvancedElectrolyzerConfig.ID.ToUpper();
             Strings.Add(prefix + ".NAME", "Advanced Electrolyzer");
             Strings.Add(prefix + ".DESC", "Water goes in one end. life sustaining oxygen comes out the other.");
@@ -67,17 +65,18 @@ namespace TagnumElite_AdvancedElectrolyzer
                 STRINGS.UI.FormatAsLink("Polluted Oxygen", "CONTAMINATEDOXYGEN")));
             ModUtil.AddBuildingToPlanScreen("Oxygen", AdvancedElectrolyzerConfig.ID);
 
-            //string status_prefix = "STRINGS.BUILDINGS.STATUSITEMS.{0}.{1}";
-            //Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZER", "NAME"), "Advanced Electrolyzer");
-            //Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZER", "TOOLTOP"), "TEST");
+            string status_prefix = "STRINGS.BUILDING.STATUSITEMS.{0}.{1}";
+            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "NAME"), "Using Water: {FlowRate}");
+            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "TOOLTIP"), "This building is using Water from storage at a rate of " + STRINGS.UI.FormatAsNegativeRate("{FlowRate}"));
+            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "NAME"), "Producing {ElementType}: {FlowRate}");
+            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "TOOLTIP"), "This building is producing {ElementType} at a rate of " + STRINGS.UI.FormatAsPositiveRate("{FlowRate}"));
         }
     }
     [HarmonyPatch(typeof(Db), "Initialize")]
     public static class InitAdvacnedElectrolyzerMod
     {
-        public static void Prefix(Db __instance)
+        public static void Prefix()
         {
-            //Debug.Log(" === Database.Techs loaded === " + AdvancedElectrolyzerConfig.ID);
             List<string> list = new List<string>(Techs.TECH_GROUPING["ImprovedOxygen"]) { AdvancedElectrolyzerConfig.ID };
             Techs.TECH_GROUPING["ImprovedOxygen"] = list.ToArray();
         }
