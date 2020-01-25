@@ -252,28 +252,14 @@ namespace TagnumElite_AdvancedElectrolyzer
 
         private void ConvertMass()
         {
-            float speedMultiplierPercentage = 1f * GetSpeedMultiplier();
-            float totalConsumptionAmount = 1f;
-            float waterConsumptionRate = Config.waterConsumptionRate * speedMultiplierPercentage * totalConsumptionAmount;
-            for (int i = 0; i < storage.items.Count; i++)
-            {
-                GameObject storageItem = storage.items[i];
-                if (storageItem != null && storageItem.HasTag(GameTags.AnyWater))
-                {
-                    PrimaryElement element = storageItem.GetComponent<PrimaryElement>();
-                    float elementConsumptionAmount = Mathf.Min(waterConsumptionRate, element.Mass);
-                    totalConsumptionAmount += elementConsumptionAmount / waterConsumptionRate;
-                }
-            }
-
             SimUtil.DiseaseInfo diseaseInfo = SimUtil.DiseaseInfo.Invalid;
             diseaseInfo.idx = byte.MaxValue;
             diseaseInfo.count = 0;
 
+            float speedMultiplier = GetSpeedMultiplier();
             bool pollutedWater = false;
             float totalConsumedAmount = 0f;
-
-            waterConsumptionRate = Config.waterConsumptionRate * speedMultiplierPercentage * totalConsumptionAmount;
+            float waterConsumptionRate = Config.waterConsumptionRate * speedMultiplier;
             for (int i = 0; i < storage.items.Count; i++)
             {
                 GameObject storageItem = storage.items[i];
@@ -313,10 +299,10 @@ namespace TagnumElite_AdvancedElectrolyzer
 
             ConduitFlow gasFlowManager = Conduit.GetFlowManager(portInfo.conduitType);
             SimHashes oxygenHash = pollutedWater ? SimHashes.ContaminatedOxygen : SimHashes.Oxygen;
-            float oxygenGenerated = gasFlowManager.AddElement(oxygenOutputCell, oxygenHash, Config.water2OxygenRatio, Mathf.Max(Config.oxygenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count/2);
+            float oxygenGenerated = gasFlowManager.AddElement(oxygenOutputCell, oxygenHash, Config.water2OxygenRatio * speedMultiplier, Mathf.Max(Config.oxygenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count/2);
             ReportManager.Instance.ReportValue(ReportManager.ReportType.OxygenCreated, oxygenGenerated, base.gameObject.GetProperName());
             Game.Instance.accumulators.Accumulate(oxygenAccumulator, oxygenGenerated);
-            float hydrogenGenerated = gasFlowManager.AddElement(hydrogenOutputCell, SimHashes.Hydrogen, Config.water2HydrogenRatio, Mathf.Max(Config.hydrogenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count / 2);
+            float hydrogenGenerated = gasFlowManager.AddElement(hydrogenOutputCell, SimHashes.Hydrogen, Config.water2HydrogenRatio * speedMultiplier, Mathf.Max(Config.hydrogenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count / 2);
             Game.Instance.accumulators.Accumulate(hydrogenAccumulator, hydrogenGenerated);
             storage.Trigger((int)GameHashes.OnStorageChange, base.gameObject);
         }
@@ -352,5 +338,4 @@ namespace TagnumElite_AdvancedElectrolyzer
         public HandleVector<int>.Handle oxygenAccumulator { get; private set; }
         public HandleVector<int>.Handle hydrogenAccumulator { get; private set; }
     }
-
 }
