@@ -5,80 +5,89 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using System;
 
-namespace TagnumElite_AdvancedElectrolyzer
+namespace TagnumElite
 {
-    public static class Mod_OnLoad
+    namespace AdvancedElectrolyzer
     {
-        private static JsonSerializer serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings { Formatting = Formatting.Indented });
+        public static class Mod_OnLoad
+        {
+            private static JsonSerializer serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings { Formatting = Formatting.Indented });
 
-        public static void OnLoad() {
-            try
+            public static void OnLoad()
             {
-                System.Reflection.Assembly assem = System.Reflection.Assembly.GetExecutingAssembly();
-                string dir = assem.Location;
-                string cbdir = assem.CodeBase.Replace("file:///", "").Replace('/', '\\');
+                try
+                {
+                    System.Reflection.Assembly assem = System.Reflection.Assembly.GetExecutingAssembly();
+                    string dir = assem.Location;
+                    string cbdir = assem.CodeBase.Replace("file:///", "").Replace('/', '\\');
 
-                if (dir != cbdir) { dir = cbdir; }
+                    if (dir != cbdir) { dir = cbdir; }
 
-                string config_path = Path.Combine(Path.GetDirectoryName(dir), "Config.json");
-                Debug.Log("File Path: " + config_path);
-                if (File.Exists(config_path)) {
-                    using (StreamReader streamReader = new StreamReader(config_path))
+                    string config_path = Path.Combine(Path.GetDirectoryName(dir), "Config.json");
+                    Debug.Log("File Path: " + config_path);
+                    if (File.Exists(config_path))
                     {
-                        using (JsonTextReader jsonReader = new JsonTextReader(streamReader))
+                        using (StreamReader streamReader = new StreamReader(config_path))
                         {
-                            AdvancedElectrolyzerConfig.config = serializer.Deserialize<AdvancedElectrolyzerConfig.Config>(jsonReader);
-                            jsonReader.Close();
+                            using (JsonTextReader jsonReader = new JsonTextReader(streamReader))
+                            {
+                                AdvancedElectrolyzerConfig.config = serializer.Deserialize<AdvancedElectrolyzerConfig.Config>(jsonReader);
+                                jsonReader.Close();
+                            }
+                            streamReader.Close();
                         }
-                        streamReader.Close();
                     }
-                } else {
-                    using (StreamWriter writer = File.CreateText(config_path)) {
-                        JsonSerializer serializer = new JsonSerializer();
-                        serializer.Serialize(writer, AdvancedElectrolyzerConfig.config);
+                    else
+                    {
+                        using (StreamWriter writer = File.CreateText(config_path))
+                        {
+                            JsonSerializer serializer = new JsonSerializer();
+                            serializer.Serialize(writer, AdvancedElectrolyzerConfig.config);
+                        }
                     }
                 }
+                catch (NotSupportedException)
+                {
+                    Debug.Log(" === Unable to find code dir! ===");
+                }
+                catch (Exception e)
+                {
+                    Debug.Log(" === Unable to load config === " + e);
+                }
             }
-            catch (NotSupportedException)
+        }
+
+        [HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
+        internal class AdvancedElectrolyzerMod
+        {
+            public static void Prefix()
             {
-                Debug.Log(" === Unable to find code dir! ===");
-            }
-            catch (Exception e) {
-                Debug.Log(" === Unable to load config === " + e);
+                string prefix = "STRINGS.BUILDINGS.PREFABS." + AdvancedElectrolyzerConfig.ID.ToUpper();
+                Strings.Add(prefix + ".NAME", "Advanced Electrolyzer");
+                Strings.Add(prefix + ".DESC", "Water goes in one end. life sustaining oxygen comes out the other.");
+                Strings.Add(prefix + ".EFFECT", string.Format("Converts {0} to {1} and {2}. Also converts {3} to {4} and {2}.",
+                    STRINGS.UI.FormatAsLink("Water", "WATER"),
+                    STRINGS.UI.FormatAsLink("Oxygen", "OXYGEN"),
+                    STRINGS.UI.FormatAsLink("Hydrogen", "HYDROGEN"),
+                    STRINGS.UI.FormatAsLink("Polluted Water", "DIRTYWATER"),
+                    STRINGS.UI.FormatAsLink("Polluted Oxygen", "CONTAMINATEDOXYGEN")));
+                ModUtil.AddBuildingToPlanScreen("Oxygen", AdvancedElectrolyzerConfig.ID);
+
+                string status_prefix = "STRINGS.BUILDING.STATUSITEMS.{0}.{1}";
+                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "NAME"), "Using Water: {FlowRate}");
+                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "TOOLTIP"), "This building is using Water from storage at a rate of " + STRINGS.UI.FormatAsNegativeRate("{FlowRate}"));
+                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "NAME"), "Producing {ElementType}: {FlowRate}");
+                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "TOOLTIP"), "This building is producing {ElementType} at a rate of " + STRINGS.UI.FormatAsPositiveRate("{FlowRate}"));
             }
         }
-    }
-
-    [HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
-    internal class AdvancedElectrolyzerMod
-    {
-        public static void Prefix()
+        [HarmonyPatch(typeof(Db), "Initialize")]
+        public static class InitAdvacnedElectrolyzerMod
         {
-            string prefix = "STRINGS.BUILDINGS.PREFABS." + AdvancedElectrolyzerConfig.ID.ToUpper();
-            Strings.Add(prefix + ".NAME", "Advanced Electrolyzer");
-            Strings.Add(prefix + ".DESC", "Water goes in one end. life sustaining oxygen comes out the other.");
-            Strings.Add(prefix + ".EFFECT", string.Format("Converts {0} to {1} and {2}. Also converts {3} to {4} and {2}.",
-                STRINGS.UI.FormatAsLink("Water", "WATER"),
-                STRINGS.UI.FormatAsLink("Oxygen", "OXYGEN"),
-                STRINGS.UI.FormatAsLink("Hydrogen", "HYDROGEN"),
-                STRINGS.UI.FormatAsLink("Polluted Water", "DIRTYWATER"),
-                STRINGS.UI.FormatAsLink("Polluted Oxygen", "CONTAMINATEDOXYGEN")));
-            ModUtil.AddBuildingToPlanScreen("Oxygen", AdvancedElectrolyzerConfig.ID);
-
-            string status_prefix = "STRINGS.BUILDING.STATUSITEMS.{0}.{1}";
-            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "NAME"), "Using Water: {FlowRate}");
-            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "TOOLTIP"), "This building is using Water from storage at a rate of " + STRINGS.UI.FormatAsNegativeRate("{FlowRate}"));
-            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "NAME"), "Producing {ElementType}: {FlowRate}");
-            Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "TOOLTIP"), "This building is producing {ElementType} at a rate of " + STRINGS.UI.FormatAsPositiveRate("{FlowRate}"));
-        }
-    }
-    [HarmonyPatch(typeof(Db), "Initialize")]
-    public static class InitAdvacnedElectrolyzerMod
-    {
-        public static void Prefix()
-        {
-            List<string> list = new List<string>(Techs.TECH_GROUPING["ImprovedOxygen"]) { AdvancedElectrolyzerConfig.ID };
-            Techs.TECH_GROUPING["ImprovedOxygen"] = list.ToArray();
+            public static void Prefix()
+            {
+                List<string> list = new List<string>(Techs.TECH_GROUPING["ImprovedOxygen"]) { AdvancedElectrolyzerConfig.ID };
+                Techs.TECH_GROUPING["ImprovedOxygen"] = list.ToArray();
+            }
         }
     }
 }
