@@ -259,7 +259,7 @@ namespace TagnumElite
                 diseaseInfo.count = 0;
 
                 float speedMultiplier = GetSpeedMultiplier();
-                bool pollutedWater = false;
+                float pollutedWater = 0f;
                 float totalConsumedAmount = 0f;
                 float waterConsumptionRate = Config.waterConsumptionRate * speedMultiplier;
                 for (int i = 0; i < storage.items.Count; i++)
@@ -267,11 +267,13 @@ namespace TagnumElite
                     GameObject storageItem = storage.items[i];
                     if (storageItem != null && storageItem.HasTag(GameTags.AnyWater))
                     {
+                        if (!(storageItem.HasTag(GameTags.Water) || storageItem.HasTag(GameTags.DirtyWater))) continue;
+
+                        PrimaryElement element = storageItem.GetComponent<PrimaryElement>();
                         if (storageItem.HasTag(SimHashes.DirtyWater.CreateTag()))
                         {
-                            pollutedWater = true;
+                            pollutedWater += element.Mass;
                         }
-                        PrimaryElement element = storageItem.GetComponent<PrimaryElement>();
                         element.KeepZeroMassObject = true;
                         float consumedAmount = Mathf.Min(waterConsumptionRate, element.Mass);
                         float consumedPercentage = consumedAmount / element.Mass;
@@ -301,7 +303,7 @@ namespace TagnumElite
                 }
 
                 ConduitFlow gasFlowManager = Conduit.GetFlowManager(portInfo.conduitType);
-                SimHashes oxygenHash = pollutedWater ? SimHashes.ContaminatedOxygen : SimHashes.Oxygen;
+                SimHashes oxygenHash = pollutedWater > 0.1f ? SimHashes.ContaminatedOxygen : SimHashes.Oxygen;
                 float oxygenGenerated = gasFlowManager.AddElement(oxygenOutputCell, oxygenHash, Config.water2OxygenRatio * speedMultiplier, Mathf.Max(Config.oxygenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count / 2);
                 ReportManager.Instance.ReportValue(ReportManager.ReportType.OxygenCreated, oxygenGenerated, base.gameObject.GetProperName());
                 Game.Instance.accumulators.Accumulate(oxygenAccumulator, oxygenGenerated);
