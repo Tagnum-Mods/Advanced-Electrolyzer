@@ -82,9 +82,7 @@
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == Debug ..\..\lib\pdb2mdb.exe" "$(TargetDir)$(TargetFileName)"
 
-rd /s /q "D:\Online Storage\OneDrive\Documents\Klei\OxygenNotIncluded\mods\dev\$(ProjectName)"
-
-xcopy "$(TargetDir.TrimEnd('\'))" "D:\Online Storage\OneDrive\Documents\Klei\OxygenNotIncluded\mods\dev\$(ProjectName)" /Y /S /E /I
+xcopy "$(TargetDir.TrimEnd('\'))" "D:\Online Storage\OneDrive\Documents\Klei\OxygenNotIncluded\mods\dev\AdvancedElectrolyzer\archived_versions\spaced_out" /Y /S /E /I
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
