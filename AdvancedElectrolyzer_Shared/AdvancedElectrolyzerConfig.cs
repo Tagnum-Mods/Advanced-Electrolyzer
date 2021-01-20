@@ -38,6 +38,10 @@ namespace TagnumElite
                 public float energyConsumption = 400f;
                 [JsonProperty("Work Speed Multiplier")]
                 public float workSpeedMultiplier = 1f;
+                [JsonProperty("Salt Water To Salt Ratio")]
+                public float saltWaterRatio = 0.00142857142857f;
+                [JsonProperty("Brine to Salt Ratio")]
+                public float brineRatio = 0.00333333333333f;
             }
 
             public override BuildingDef CreateBuildingDef()

@@ -185,6 +185,8 @@ namespace TagnumElite
             [MyCmpReq]
             private Building building;
 
+            private const float EPSILON = 0.00001f;
+
             public Action<float> onConvertMass;
 
             private static StatusItem ElementConverterInput;
@@ -221,7 +223,7 @@ namespace TagnumElite
                 {
                     GameObject item = items[i];
 
-                    if (item.HasTag(GameTags.AnyWater) && item.GetComponent<PrimaryElement>().Mass > 0f)
+                    if (item.HasTag(GameTags.AnyWater) && item.GetComponent<PrimaryElement>().Mass > EPSILON)
                     {
                         result = true;
                     }
@@ -258,7 +260,7 @@ namespace TagnumElite
                     GameObject storageItem = storage.items[i];
                     if (storageItem != null)
                     {
-                        if (storageItem.HasTag(GameTags.Water) || storageItem.HasTag(GameTags.DirtyWater)) continue;
+                        if (storageItem.HasTag(GameTags.AnyWater)) continue;
 
                         i--;
                         storage.Remove(storageItem);
@@ -276,7 +278,13 @@ namespace TagnumElite
                 diseaseInfo.count = 0;
 
                 float speedMultiplier = GetSpeedMultiplier();
+
+                // Accumulators
                 float pollutedWater = 0f;
+                float cleanWater = 0f;
+                float saltWater = 0f;
+                float brineWater = 0f;
+
                 float totalConsumedAmount = 0f;
                 float waterConsumptionRate = Config.waterConsumptionRate * speedMultiplier;
                 for (int i = 0; i < storage.items.Count; i++)
@@ -284,13 +292,17 @@ namespace TagnumElite
                     GameObject storageItem = storage.items[i];
                     if (storageItem != null && storageItem.HasTag(GameTags.AnyWater))
                     {
-                        if (!(storageItem.HasTag(GameTags.Water) || storageItem.HasTag(GameTags.DirtyWater))) continue;
-
                         PrimaryElement element = storageItem.GetComponent<PrimaryElement>();
+
                         if (storageItem.HasTag(SimHashes.DirtyWater.CreateTag()))
-                        {
                             pollutedWater += element.Mass;
-                        }
+                        else if (storageItem.HasTag(SimHashes.SaltWater.CreateTag()))
+                            saltWater += element.Mass;
+                        else if (storageItem.HasTag(SimHashes.Brine.CreateTag()))
+                            brineWater += element.Mass;
+                        else
+                            cleanWater += element.Mass;
+
                         element.KeepZeroMassObject = true;
                         float consumedAmount = Mathf.Min(waterConsumptionRate, element.Mass);
                         float consumedPercentage = consumedAmount / element.Mass;
@@ -326,6 +338,17 @@ namespace TagnumElite
                 Game.Instance.accumulators.Accumulate(OxygenAccumulator, oxygenGenerated);
                 float hydrogenGenerated = gasFlowManager.AddElement(hydrogenOutputCell, SimHashes.Hydrogen, Config.water2HydrogenRatio * speedMultiplier, Mathf.Max(Config.hydrogenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count / 2);
                 Game.Instance.accumulators.Accumulate(HydrogenAccumulator, hydrogenGenerated);
+
+                if (brineWater > EPSILON || saltWater > EPSILON) {
+                    Element salt = ElementLoader.FindElementByHash(SimHashes.Salt);
+                    Vector3 base_position = transform.GetPosition();
+                    Vector3 position = new Vector3(base_position.x + 0.5f, base_position.y + 0.5f, base_position.z + 0.5f);
+                    float mass = 0f;
+                    mass += saltWater * Config.saltWaterRatio;
+                    mass += brineWater * Config.brineRatio;
+                    salt.substance.SpawnResource(position, mass, temperature, diseaseInfo.idx, diseaseInfo.count);
+                }
+
                 storage.Trigger((int)GameHashes.OnStorageChange, gameObject);
             }
 
