@@ -96,7 +96,7 @@ namespace TagnumElite
                 conduitConsumer.forceAlwaysSatisfied = true;
                 conduitConsumer.wrongElementResult = ConduitConsumer.WrongElementResult.Dump;
 
-                AdvancedElectrolyzerMachine electrolyzer = go.AddOrGet<AdvancedElectrolyzerMachine>();
+                AdvancedElectrolyzer electrolyzer = go.AddOrGet<AdvancedElectrolyzer>();
                 electrolyzer.portInfo = secondaryPort;
 
                 Prioritizable.AddRef(go);

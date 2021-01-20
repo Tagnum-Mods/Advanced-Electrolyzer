@@ -155,11 +155,13 @@ namespace TagnumElite
                 smi.StartSM();
                 UpdateMeter();
                 Tutorial.Instance.oxygenGenerators.Add(gameObject);
+
+
             }
 
             protected override void OnCleanUp()
             {
-                Tutorial.Instance.oxygenGenerators.Remove(base.gameObject);
+                Tutorial.Instance.oxygenGenerators.Remove(gameObject);
                 IUtilityNetworkMgr networkManager = Conduit.GetNetworkManager(portInfo.conduitType);
                 networkManager.RemoveFromNetworks(hydrogenOutputCell, hydrogenOutputItem, true);
 
@@ -266,7 +268,7 @@ namespace TagnumElite
                         storage.Remove(storageItem);
                         PrimaryElement element = storageItem.GetComponent<PrimaryElement>();
                         int disease_count = (int)((float)element.DiseaseCount * element.Mass);
-                        SimMessages.AddRemoveSubstance(Grid.PosToCell(base.transform.GetPosition()), element.Element.id, CellEventLogger.Instance.ConduitConsumerWrongElement, element.Mass, element.Temperature, element.DiseaseIdx, disease_count);
+                        SimMessages.AddRemoveSubstance(Grid.PosToCell(transform.GetPosition()), element.Element.id, CellEventLogger.Instance.ConduitConsumerWrongElement, element.Mass, element.Temperature, element.DiseaseIdx, disease_count);
                     }
                 }
             }
