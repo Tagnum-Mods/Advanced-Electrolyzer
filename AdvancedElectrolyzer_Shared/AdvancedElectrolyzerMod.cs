@@ -15,6 +15,9 @@ namespace TagnumElite
 
             public static void OnLoad()
             {
+#if DEBUG
+                HarmonyInstance.DEBUG = true;
+#endif
                 try
                 {
                     System.Reflection.Assembly assem = System.Reflection.Assembly.GetExecutingAssembly();
@@ -62,16 +65,15 @@ namespace TagnumElite
         {
             public static void Prefix()
             {
-                string prefix = "STRINGS.BUILDINGS.PREFABS." + AdvancedElectrolyzerConfig.ID.ToUpper();
-                Strings.Add(prefix + ".NAME", "Advanced Electrolyzer");
-                Strings.Add(prefix + ".DESC", "Water goes in one end. life sustaining oxygen comes out the other.");
-                Strings.Add(prefix + ".EFFECT", string.Format("Converts {0} to {1} and {2}. Also converts {3} to {4} and {2}.",
+                AddBuilding(AdvancedElectrolyzerConfig.ID,
+                name: "Advanced Electrolyzer",
+                desc: "Water goes in one end. life sustaining oxygen comes out the other.",
+                effect: string.Format("Converts {0} to {1} and {2}. Also converts {3} to {4} and {2}.",
                     STRINGS.UI.FormatAsLink("Water", "WATER"),
                     STRINGS.UI.FormatAsLink("Oxygen", "OXYGEN"),
                     STRINGS.UI.FormatAsLink("Hydrogen", "HYDROGEN"),
                     STRINGS.UI.FormatAsLink("Polluted Water", "DIRTYWATER"),
                     STRINGS.UI.FormatAsLink("Polluted Oxygen", "CONTAMINATEDOXYGEN")));
-                ModUtil.AddBuildingToPlanScreen("Oxygen", AdvancedElectrolyzerConfig.ID);
 
                 string status_prefix = "STRINGS.BUILDING.STATUSITEMS.{0}.{1}";
                 Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "NAME"), "Using Water: {FlowRate}");
@@ -79,14 +81,52 @@ namespace TagnumElite
                 Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "NAME"), "Producing {ElementType}: {FlowRate}");
                 Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "TOOLTIP"), "This building is producing {ElementType} at a rate of " + STRINGS.UI.FormatAsPositiveRate("{FlowRate}"));
             }
+
+            private static void AddBuilding(string id, string name, string desc, string effect)
+            {
+                string prefix = "STRINGS.BUILDINGS.PREFABS." + id.ToUpper();
+                Strings.Add(prefix + ".NAME", name);
+                Strings.Add(prefix + ".DESC", desc);
+                Strings.Add(prefix + ".EFFECT", effect);
+                ModUtil.AddBuildingToPlanScreen("Oxygen", id);
+            }
         }
         [HarmonyPatch(typeof(Db), "Initialize")]
         public static class InitAdvacnedElectrolyzerMod
         {
-            public static void Prefix()
+            public static void Postfix()
             {
-                List<string> list = new List<string>(Techs.TECH_GROUPING["ImprovedOxygen"]) { AdvancedElectrolyzerConfig.ID };
-                Techs.TECH_GROUPING["ImprovedOxygen"] = list.ToArray();
+                AddBuildingToTechnology("ImprovedOxygen", AdvancedElectrolyzerConfig.ID);
+            }
+
+            /* Shamelessly stolen from SanchozzDeponianin: https://github.com/SanchozzDeponianin/ONIMods/blob/134293b28abf0ec96cf307eb0f8f372eff4e9940/src/lib/Utils.cs#L137-L165 */
+            public static void AddBuildingToTechnology(string tech, string buildingId)
+            {
+                var tech_grouping = Traverse.Create(typeof(Techs))?.Field("TECH_GROUPING")?.GetValue<Dictionary<string, string[]>>();
+                if (tech_grouping != null)
+                {
+                    if (tech_grouping.ContainsKey(tech))
+                    {
+                        List<string> techList = new List<string>(tech_grouping[tech]) { buildingId };
+                        tech_grouping[tech] = techList.ToArray();
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Could not find '{tech}' tech in TECH_GROUPING.");
+                    }
+                }
+                else
+                {
+                    var targetTech = Db.Get().Techs.TryGet(tech);
+                    if (targetTech != null)
+                    {
+                        Traverse.Create(targetTech)?.Field("unlockedItemIDs")?.GetValue<List<string>>()?.Add(buildingId);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Could not find '{tech}' tech.");
+                    }
+                }
             }
         }
     }

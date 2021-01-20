@@ -71,13 +71,14 @@ namespace TagnumElite
                 buildingDef.UtilityOutputOffset = new CellOffset(1, 1);
                 buildingDef.PermittedRotations = PermittedRotations.FlipH;
                 buildingDef.LogicInputPorts = LogicOperationalController.CreateSingleInputPortList(new CellOffset(1, 0));
+                GeneratedBuildings.RegisterWithOverlay(OverlayScreen.GasVentIDs, "AdvancedElectrolyzer");
                 return buildingDef;
             }
 
             public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
             {
                 go.GetComponent<KPrefabID>().AddTag(RoomConstraints.ConstraintTags.IndustrialMachinery);
-
+                go.AddOrGet<Structure>();
                 go.AddOrGet<LoopingSounds>();
 
                 Storage storage = go.AddOrGet<Storage>();
@@ -91,7 +92,7 @@ namespace TagnumElite
                 conduitConsumer.forceAlwaysSatisfied = true;
                 conduitConsumer.wrongElementResult = ConduitConsumer.WrongElementResult.Dump;
 
-                AdvancedElectrolyzer electrolyzer = go.AddOrGet<AdvancedElectrolyzer>();
+                AdvancedElectrolyzerMachine electrolyzer = go.AddOrGet<AdvancedElectrolyzerMachine>();
                 electrolyzer.portInfo = secondaryPort;
 
                 Prioritizable.AddRef(go);
@@ -99,11 +100,13 @@ namespace TagnumElite
 
             public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
             {
+                base.DoPostConfigurePreview(def, go);
                 AttachPort(go);
             }
 
             public override void DoPostConfigureUnderConstruction(GameObject go)
             {
+                base.DoPostConfigureUnderConstruction(go);
                 AttachPort(go);
             }
 
@@ -112,6 +115,7 @@ namespace TagnumElite
                 go.AddOrGet<LogicOperationalController>();
                 go.AddOrGetDef<PoweredActiveController.Def>();
             }
+
             private void AttachPort(GameObject go)
             {
                 ConduitSecondaryOutput conduitSecondaryOutput = go.AddComponent<ConduitSecondaryOutput>();

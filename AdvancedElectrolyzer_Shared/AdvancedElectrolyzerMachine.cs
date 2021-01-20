@@ -1,6 +1,5 @@
 ﻿using Klei;
 using Klei.AI;
-using KSerialization;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,8 +10,7 @@ namespace TagnumElite
 {
     namespace AdvancedElectrolyzer
     {
-        [SerializationConfig(MemberSerialization.OptIn)]
-        public class AdvancedElectrolyzer : StateMachineComponent<AdvancedElectrolyzer.StatesInstance>, ISecondaryOutput
+        public class AdvancedElectrolyzerMachine : StateMachineComponent<AdvancedElectrolyzerMachine.StatesInstance>
         {
             [Conditional("DEBUG")]
             private static void debug(object obj)
@@ -20,11 +18,11 @@ namespace TagnumElite
                 Debug.Log("[Advanced Electrolyzer] " + obj);
             }
 
-            public class StatesInstance : GameStateMachine<States, StatesInstance, AdvancedElectrolyzer, object>.GameInstance
+            public class StatesInstance : GameStateMachine<States, StatesInstance, AdvancedElectrolyzerMachine, object>.GameInstance
             {
                 private List<Guid> statusItemEntries = new List<Guid>();
 
-                public StatesInstance(AdvancedElectrolyzer smi) : base(smi) { }
+                public StatesInstance(AdvancedElectrolyzerMachine smi) : base(smi) { }
 
                 public void AddStatusItems()
                 {
@@ -43,7 +41,7 @@ namespace TagnumElite
                 }
             }
 
-            public class States : GameStateMachine<States, StatesInstance, AdvancedElectrolyzer>
+            public class States : GameStateMachine<States, StatesInstance, AdvancedElectrolyzerMachine>
             {
                 public State disabled;
                 public State waiting;
@@ -80,19 +78,20 @@ namespace TagnumElite
                         debug("Converting Enter");
                         smi.AddStatusItems();
                         smi.master.operational.SetActive(true);
-                    // Then once we exit, remove status items
-                }).Exit("RemoveStatusItems", delegate (StatesInstance smi)
-                {
-                    debug("Converting Exit");
-                    smi.RemoveStatusItems();
-                    // Transition into disabled if not operation or IsActive
-                })
+                        // Then once we exit, remove status items
+                    }).Exit("RemoveStatusItems", delegate (StatesInstance smi)
+                    {
+                        debug("Converting Exit");
+                        smi.RemoveStatusItems();
+                        // Transition into disabled if not operation or IsActive
+                    })
                     .Transition(waiting, (StatesInstance smi) => !smi.master.CanConvertAtAll())
                     .Transition(blocked, (StatesInstance smi) => !smi.master.RoomForPressure)
                     //.EventTransition(GameHashes.OperationalChanged, disabled, (StatesInstance smi) => smi.master.operational != null && !smi.master.operational.IsActive)
                     .Update("ConvertMass", delegate (StatesInstance smi, float dt)
                     {
                         debug("Convert Mass");
+                        smi.master.CheckStorage();
                         smi.master.ConvertMass();
                     }, UpdateRate.SIM_1000ms, load_balance: true);
 
@@ -108,7 +107,7 @@ namespace TagnumElite
             protected override void OnPrefabInit()
             {
                 base.OnPrefabInit();
-                Attributes attributes = base.gameObject.GetAttributes();
+                Attributes attributes = gameObject.GetAttributes();
                 machinerySpeedAttribute = attributes.Add(Db.Get().Attributes.MachinerySpeed);
 
                 if (ElementConverterInput == null)
@@ -135,17 +134,17 @@ namespace TagnumElite
             {
                 base.OnSpawn();
 
-                this.oxygenOutputCell = this.building.GetUtilityOutputCell();
-                int cell = Grid.PosToCell(base.transform.GetPosition());
-                CellOffset rotatedOffset = this.building.GetRotatedOffset(this.portInfo.offset);
-                this.hydrogenOutputCell = Grid.OffsetCell(cell, rotatedOffset);
-                IUtilityNetworkMgr networkManager = Conduit.GetNetworkManager(this.portInfo.conduitType);
-                this.hydrogenOutputItem = new FlowUtilityNetwork.NetworkItem(this.portInfo.conduitType, Endpoint.Source, this.hydrogenOutputCell, base.gameObject);
-                networkManager.AddToNetworks(this.hydrogenOutputCell, this.hydrogenOutputItem, true);
+                oxygenOutputCell = building.GetUtilityOutputCell();
+                int cell = Grid.PosToCell(transform.GetPosition());
+                CellOffset rotatedOffset = building.GetRotatedOffset(portInfo.offset);
+                hydrogenOutputCell = Grid.OffsetCell(cell, rotatedOffset);
+                IUtilityNetworkMgr networkManager = Conduit.GetNetworkManager(portInfo.conduitType);
+                hydrogenOutputItem = new FlowUtilityNetwork.NetworkItem(portInfo.conduitType, Endpoint.Source, hydrogenOutputCell, gameObject);
+                networkManager.AddToNetworks(hydrogenOutputCell, hydrogenOutputItem, true);
 
-                waterAccumulator = Game.Instance.accumulators.Add("ElementsConsumed", this);
-                oxygenAccumulator = Game.Instance.accumulators.Add("OutputElements", this);
-                hydrogenAccumulator = Game.Instance.accumulators.Add("OutputElements", this);
+                WaterAccumulator = Game.Instance.accumulators.Add("ElementsConsumed", this);
+                OxygenAccumulator = Game.Instance.accumulators.Add("OutputElements", this);
+                HydrogenAccumulator = Game.Instance.accumulators.Add("OutputElements", this);
 
                 KBatchedAnimController batchedAnimController = GetComponent<KBatchedAnimController>();
 
@@ -153,20 +152,20 @@ namespace TagnumElite
                 {
                     meter = new MeterController(batchedAnimController, "U2H_meter_target", "meter", Meter.Offset.Behind, Grid.SceneLayer.NoLayer, new Vector3(-0.4f, 0.5f, -0.1f), "U2H_meter_target", "U2H_meter_tank", "U2H_meter_waterbody", "U2H_meter_level");
                 }
-                base.smi.StartSM();
+                smi.StartSM();
                 UpdateMeter();
-                Tutorial.Instance.oxygenGenerators.Add(base.gameObject);
+                Tutorial.Instance.oxygenGenerators.Add(gameObject);
             }
 
             protected override void OnCleanUp()
             {
                 Tutorial.Instance.oxygenGenerators.Remove(base.gameObject);
-                IUtilityNetworkMgr networkManager = Conduit.GetNetworkManager(this.portInfo.conduitType);
-                networkManager.RemoveFromNetworks(this.hydrogenOutputCell, this.hydrogenOutputItem, true);
+                IUtilityNetworkMgr networkManager = Conduit.GetNetworkManager(portInfo.conduitType);
+                networkManager.RemoveFromNetworks(hydrogenOutputCell, hydrogenOutputItem, true);
 
-                Game.Instance.accumulators.Remove(waterAccumulator);
-                Game.Instance.accumulators.Remove(oxygenAccumulator);
-                Game.Instance.accumulators.Remove(hydrogenAccumulator);
+                Game.Instance.accumulators.Remove(WaterAccumulator);
+                Game.Instance.accumulators.Remove(OxygenAccumulator);
+                Game.Instance.accumulators.Remove(HydrogenAccumulator);
 
                 base.OnCleanUp();
             }
@@ -252,6 +251,24 @@ namespace TagnumElite
                 return result;
             }
 
+            private void CheckStorage()
+            {
+                for (int i = 0; i < storage.items.Count; i++)
+                {
+                    GameObject storageItem = storage.items[i];
+                    if (storageItem != null)
+                    {
+                        if (storageItem.HasTag(GameTags.Water) || storageItem.HasTag(GameTags.DirtyWater)) continue;
+
+                        i--;
+                        storage.Remove(storageItem);
+                        PrimaryElement element = storageItem.GetComponent<PrimaryElement>();
+                        int disease_count = (int)((float)element.DiseaseCount * element.Mass);
+                        SimMessages.AddRemoveSubstance(Grid.PosToCell(base.transform.GetPosition()), element.Element.id, CellEventLogger.Instance.ConduitConsumerWrongElement, element.Mass, element.Temperature, element.DiseaseIdx, disease_count);
+                    }
+                }
+            }
+
             private void ConvertMass()
             {
                 SimUtil.DiseaseInfo diseaseInfo = SimUtil.DiseaseInfo.Invalid;
@@ -305,11 +322,11 @@ namespace TagnumElite
                 ConduitFlow gasFlowManager = Conduit.GetFlowManager(portInfo.conduitType);
                 SimHashes oxygenHash = pollutedWater > 0.1f ? SimHashes.ContaminatedOxygen : SimHashes.Oxygen;
                 float oxygenGenerated = gasFlowManager.AddElement(oxygenOutputCell, oxygenHash, Config.water2OxygenRatio * speedMultiplier, Mathf.Max(Config.oxygenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count / 2);
-                ReportManager.Instance.ReportValue(ReportManager.ReportType.OxygenCreated, oxygenGenerated, base.gameObject.GetProperName());
-                Game.Instance.accumulators.Accumulate(oxygenAccumulator, oxygenGenerated);
+                ReportManager.Instance.ReportValue(ReportManager.ReportType.OxygenCreated, oxygenGenerated, gameObject.GetProperName());
+                Game.Instance.accumulators.Accumulate(OxygenAccumulator, oxygenGenerated);
                 float hydrogenGenerated = gasFlowManager.AddElement(hydrogenOutputCell, SimHashes.Hydrogen, Config.water2HydrogenRatio * speedMultiplier, Mathf.Max(Config.hydrogenTemperature, temperature), diseaseInfo.idx, diseaseInfo.count / 2);
-                Game.Instance.accumulators.Accumulate(hydrogenAccumulator, hydrogenGenerated);
-                storage.Trigger((int)GameHashes.OnStorageChange, base.gameObject);
+                Game.Instance.accumulators.Accumulate(HydrogenAccumulator, hydrogenGenerated);
+                storage.Trigger((int)GameHashes.OnStorageChange, gameObject);
             }
 
             private bool RoomForPressure
@@ -321,16 +338,6 @@ namespace TagnumElite
                 }
             }
 
-            public CellOffset GetSecondaryConduitOffset()
-            {
-                return this.portInfo.offset;
-            }
-
-            public ConduitType GetSecondaryConduitType()
-            {
-                return this.portInfo.conduitType;
-            }
-
             public AdvancedElectrolyzerConfig.Config Config
             {
                 get
@@ -339,9 +346,9 @@ namespace TagnumElite
                 }
             }
 
-            public HandleVector<int>.Handle waterAccumulator { get; private set; }
-            public HandleVector<int>.Handle oxygenAccumulator { get; private set; }
-            public HandleVector<int>.Handle hydrogenAccumulator { get; private set; }
+            public HandleVector<int>.Handle WaterAccumulator { get; private set; }
+            public HandleVector<int>.Handle OxygenAccumulator { get; private set; }
+            public HandleVector<int>.Handle HydrogenAccumulator { get; private set; }
         }
     }
 }
