@@ -1,17 +1,32 @@
 ﻿using Database;
 using Harmony;
-using System.IO;
-using System.Collections.Generic;
+using KMod;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using static Localization;
 
 namespace TagnumElite
 {
     namespace AdvancedElectrolyzer
     {
-        public static class Mod_OnLoad
+        public static class AdvancedElectrolyzersMod
         {
             private static JsonSerializer serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings { Formatting = Formatting.Indented });
+
+            public static string mod_loc;
+
+            public static Config config = new Config();
+
+            public class Config
+            {
+                [JsonProperty]
+                public const string version = "2.0.0";
+                [JsonProperty]
+                public AdvancedElectrolyzerConfig.AEConfig advancedElectrolyzer = new AdvancedElectrolyzerConfig.AEConfig();
+            }
 
             public static void OnLoad()
             {
@@ -25,6 +40,7 @@ namespace TagnumElite
                     string cbdir = assem.CodeBase.Replace("file:///", "").Replace('/', '\\');
 
                     if (dir != cbdir) { dir = cbdir; }
+                    mod_loc = dir;
 
                     string config_path = Path.Combine(Path.GetDirectoryName(dir), "Config.json");
                     Debug.Log("File Path: " + config_path);
@@ -34,7 +50,7 @@ namespace TagnumElite
                         {
                             using (JsonTextReader jsonReader = new JsonTextReader(streamReader))
                             {
-                                AdvancedElectrolyzerConfig.config = serializer.Deserialize<AdvancedElectrolyzerConfig.Config>(jsonReader);
+                                config = serializer.Deserialize<Config>(jsonReader);
                                 jsonReader.Close();
                             }
                             streamReader.Close();
@@ -45,7 +61,7 @@ namespace TagnumElite
                         using (StreamWriter writer = File.CreateText(config_path))
                         {
                             JsonSerializer serializer = new JsonSerializer();
-                            serializer.Serialize(writer, AdvancedElectrolyzerConfig.config);
+                            serializer.Serialize(writer, config);
                         }
                     }
                 }
@@ -58,41 +74,39 @@ namespace TagnumElite
                     Debug.Log(" === Unable to load config === " + e);
                 }
             }
+
+            [Conditional("DEBUG")]
+            public static void Log(object obj, UnityEngine.LogType logLevel = UnityEngine.LogType.Log)
+            {
+                string message = "[AdvancedElectrolyzer]: " + obj;
+                switch (logLevel)
+                {
+                    case UnityEngine.LogType.Exception:
+                    case UnityEngine.LogType.Error:
+                        Debug.LogError(message);
+                        break;
+                    case UnityEngine.LogType.Assert:
+                    case UnityEngine.LogType.Warning:
+                        Debug.LogWarning(message);
+                        break;
+                    default:
+                        Debug.Log(message);
+                        break;
+                }
+            }
         }
 
         [HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
-        internal class AdvancedElectrolyzerMod
+        internal class GeneratedBuildings_LoadGeneratedBuildings_Patch
         {
             public static void Prefix()
             {
-                AddBuilding(AdvancedElectrolyzerConfig.ID,
-                name: "Advanced Electrolyzer",
-                desc: "Water goes in one end. life sustaining oxygen comes out the other.",
-                effect: string.Format("Converts {0} to {1} and {2}. Also converts {3} to {4} and {2}.",
-                    STRINGS.UI.FormatAsLink("Water", "WATER"),
-                    STRINGS.UI.FormatAsLink("Oxygen", "OXYGEN"),
-                    STRINGS.UI.FormatAsLink("Hydrogen", "HYDROGEN"),
-                    STRINGS.UI.FormatAsLink("Polluted Water", "DIRTYWATER"),
-                    STRINGS.UI.FormatAsLink("Polluted Oxygen", "CONTAMINATEDOXYGEN")));
-
-                string status_prefix = "STRINGS.BUILDING.STATUSITEMS.{0}.{1}";
-                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "NAME"), "Using Water: {FlowRate}");
-                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZERINPUT", "TOOLTIP"), "This building is using Water from storage at a rate of " + STRINGS.UI.FormatAsNegativeRate("{FlowRate}"));
-                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "NAME"), "Producing {ElementType}: {FlowRate}");
-                Strings.Add(string.Format(status_prefix, "ADVANCEDELECTROLYZEROUTPUT", "TOOLTIP"), "This building is producing {ElementType} at a rate of " + STRINGS.UI.FormatAsPositiveRate("{FlowRate}"));
-            }
-
-            private static void AddBuilding(string id, string name, string desc, string effect)
-            {
-                string prefix = "STRINGS.BUILDINGS.PREFABS." + id.ToUpper();
-                Strings.Add(prefix + ".NAME", name);
-                Strings.Add(prefix + ".DESC", desc);
-                Strings.Add(prefix + ".EFFECT", effect);
-                ModUtil.AddBuildingToPlanScreen("Oxygen", id);
+                ModUtil.AddBuildingToPlanScreen("Oxygen", AdvancedElectrolyzerConfig.ID);
             }
         }
+
         [HarmonyPatch(typeof(Db), "Initialize")]
-        public static class InitAdvacnedElectrolyzerMod
+        public static class Db_Initialize_Patch
         {
             public static void Postfix()
             {
@@ -127,6 +141,35 @@ namespace TagnumElite
                         Debug.LogWarning($"Could not find '{tech}' tech.");
                     }
                 }
+            }
+        }
+
+        [HarmonyPatch(typeof(Localization), "Initialize")]
+        public class Localization_Initialize_Patch
+        {
+            public static void Postfix() => Translate(typeof(AdvancedElectrolyzersStrings.STRINGS));
+
+            public static void Translate(Type root)
+            {
+                // Basic intended way to register strings, keeps namespace
+                RegisterForTranslation(root);
+
+                // Load user created translation files
+                LoadStrings();
+
+                // Register strings without namespace
+                // because we already loaded user transltions, custom languages will overwrite these
+                LocString.CreateLocStringKeys(root, null);
+
+                // Creates template for users to edit
+                GenerateStringsTemplate(root, Path.Combine(Manager.GetDirectory(), "strings_templates"));
+            }
+
+            private static void LoadStrings()
+            {
+                string path = Path.Combine(AdvancedElectrolyzersMod.mod_loc, "translations", GetLocale()?.Code + ".po");
+                if (File.Exists(path))
+                    OverloadStrings(LoadStringsFile(path, false));
             }
         }
     }

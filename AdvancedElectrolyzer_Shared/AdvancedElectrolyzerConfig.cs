@@ -13,19 +13,35 @@ namespace TagnumElite
 
             private readonly ConduitPortInfo secondaryPort = new ConduitPortInfo(ConduitType.Gas, new CellOffset(0, 1));
 
-            public static Config config = new Config();
+            public static AEConfig Config => AdvancedElectrolyzerMod.config.advancedElectrolyzer;
 
-            public class Config
+            public class AEConfig
             {
                 // This is litre per second
-                [JsonProperty("Water Consumption Rate")]
+                [JsonProperty]
                 public float waterConsumptionRate = 1f;
+
+                // # Clean/Polluted Water #
                 // This is gram per second
-                [JsonProperty("Oxygen Output Amount")]
+                [JsonProperty]
                 public float water2OxygenRatio = 0.888f;
                 // This is gram per second
-                [JsonProperty("Hydrogen Output Amount")]
+                [JsonProperty]
                 public float water2HydrogenRatio = 0.111999989f;
+                // # Salt Water #
+                [JsonProperty]
+                public float saltWater2WaterRatio = 0.93f;
+                [JsonProperty]
+                public float saltWater2SaltRatio = 0.07f;
+                // # Brine #
+                [JsonProperty]
+                public float brine2WaterRatio = 0.7f;
+                [JsonProperty]
+                public float brine2SaltRatio = 0.3f;
+
+                [JsonProperty]
+                public float salt2BleachStoneRatio = 0.61f;
+
                 [JsonProperty("Minimium Oxygen Temperature")]
                 public float oxygenTemperature = 293.15f;
                 [JsonProperty("Minimium Hydrogen Temperature")]
@@ -34,38 +50,45 @@ namespace TagnumElite
                 public float heatExhaust = 0f;
                 [JsonProperty("Self Heat Amount")]
                 public float heatSelf = 4f;
+
                 [JsonProperty("Energy Consumption")]
                 public float energyConsumption = 400f;
                 [JsonProperty("Work Speed Multiplier")]
                 public float workSpeedMultiplier = 1f;
-                [JsonProperty("Salt Water To Salt Ratio")]
-                public float saltWaterRatio = 0.00142857142857f;
-                [JsonProperty("Brine to Salt Ratio")]
-                public float brineRatio = 0.00333333333333f;
+
+                [JsonProperty("Process Brine/Saltwater")]
+                public bool processSaltAndBrine = false;
+                [JsonProperty]
+                public bool requireSaltForConstruction = false;
+                [JsonProperty]
+                public float requiredSaltForConstruction = 50f;
             }
 
             public override BuildingDef CreateBuildingDef()
             {
+                float[] material_mass = new float[2] { BUILDINGS.CONSTRUCTION_MASS_KG.TIER3[0], Config.requiredSaltForConstruction };
+                string[] materials = new string[2] { MATERIALS.METAL, "Salt" };
+
                 BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(
                     id: ID,
                     width: 2,
                     height: 2,
-                    anim: "electrolyzer_kanim", //advanced_electrolyzer_kanim
+                    anim: "advanced_electrolyzer_kanim",
                     hitpoints: BUILDINGS.HITPOINTS.TIER3,
                     construction_time: BUILDINGS.CONSTRUCTION_TIME_SECONDS.TIER3,
-                    construction_mass: BUILDINGS.CONSTRUCTION_MASS_KG.TIER3,
-                    construction_materials: MATERIALS.ALL_METALS,
+                    construction_mass: Config.requireSaltForConstruction ? material_mass : BUILDINGS.CONSTRUCTION_MASS_KG.TIER3,
+                    construction_materials: Config.requireSaltForConstruction ? materials : MATERIALS.ALL_METALS,
                     melting_point: BUILDINGS.MELTING_POINT_KELVIN.TIER3,
                     build_location_rule: BuildLocationRule.Anywhere,
-                    decor: BUILDINGS.DECOR.PENALTY.TIER1,
-                    noise: NOISE_POLLUTION.NOISY.TIER3,
+                    decor: BUILDINGS.DECOR.PENALTY.TIER2,
+                    noise: NOISE_POLLUTION.NOISY.TIER2,
                     0.2f
                 );
                 buildingDef.RequiresPowerInput = true;
                 buildingDef.PowerInputOffset = new CellOffset(1, 0);
-                buildingDef.EnergyConsumptionWhenActive = config.energyConsumption;
-                buildingDef.ExhaustKilowattsWhenActive = config.heatExhaust;
-                buildingDef.SelfHeatKilowattsWhenActive = config.heatSelf;
+                buildingDef.EnergyConsumptionWhenActive = Config.energyConsumption;
+                buildingDef.ExhaustKilowattsWhenActive = Config.heatExhaust;
+                buildingDef.SelfHeatKilowattsWhenActive = Config.heatSelf;
                 buildingDef.ViewMode = OverlayModes.GasConduits.ID;
                 buildingDef.MaterialCategory = MATERIALS.REFINED_METALS;
                 buildingDef.AudioCategory = "HollowMetal";
@@ -75,7 +98,7 @@ namespace TagnumElite
                 buildingDef.UtilityOutputOffset = new CellOffset(1, 1);
                 buildingDef.PermittedRotations = PermittedRotations.FlipH;
                 buildingDef.LogicInputPorts = LogicOperationalController.CreateSingleInputPortList(new CellOffset(1, 0));
-                GeneratedBuildings.RegisterWithOverlay(OverlayScreen.GasVentIDs, "AdvancedElectrolyzer");
+                GeneratedBuildings.RegisterWithOverlay(OverlayScreen.GasVentIDs, ID);
                 return buildingDef;
             }
 
