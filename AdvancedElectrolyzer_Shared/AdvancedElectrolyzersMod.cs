@@ -2,6 +2,7 @@
 using Harmony;
 using KMod;
 using Newtonsoft.Json;
+using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,16 +15,18 @@ namespace TagnumElite
     {
         public static class AdvancedElectrolyzersMod
         {
-            private static JsonSerializer serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings { Formatting = Formatting.Indented });
+            //private static JsonSerializer serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings { Formatting = Formatting.Indented });
 
             public static string mod_loc;
 
             public static Config config = new Config();
 
+            [JsonObject(MemberSerialization.OptIn)]
             public class Config
             {
                 [JsonProperty]
                 public const string version = "2.0.0";
+                [Option("STRINGS.ADVANCEDELECTROLYZERS.OPTIONS.ADV_ELECTROLYZER")]
                 [JsonProperty]
                 public AdvancedElectrolyzerConfig.AEConfig advancedElectrolyzer = new AdvancedElectrolyzerConfig.AEConfig();
             }
@@ -33,6 +36,17 @@ namespace TagnumElite
 #if DEBUG
                 HarmonyInstance.DEBUG = true;
 #endif
+                PUtil.InitLibrary(false);
+                PeterHan.PLib.Options.POptions.RegisterOptions(typeof(Config));
+                Config f_config = PeterHan.PLib.Options.POptions.ReadSettings<Config>();
+                if (f_config == null)
+                {
+                    PeterHan.PLib.Options.POptions.WriteSettings(config);
+                }
+                else {
+                    config = f_config;
+                }
+                /* OLD CODE, we are now using PLib
                 try
                 {
                     System.Reflection.Assembly assem = System.Reflection.Assembly.GetExecutingAssembly();
@@ -73,6 +87,7 @@ namespace TagnumElite
                 {
                     Debug.Log(" === Unable to load config === " + e);
                 }
+                */
             }
 
             [Conditional("DEBUG")]

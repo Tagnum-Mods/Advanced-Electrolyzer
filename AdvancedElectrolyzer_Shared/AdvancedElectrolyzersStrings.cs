@@ -22,14 +22,14 @@ namespace TagnumElite.AdvancedElectrolyzer
                             $" from seeping into the colony while closed, while allowing {FormatAsLink("Light", "LIGHT")}" +
                             $" and {FormatAsLink("Decor", "DECOR")} to pass through.\n\nDuplicants passing through will open the door for a short while, letting gases and liquids to pass through.";
                     }
-
+                    /*
                     public class HighTempElectrolyzerMachine
                     {
                         public static LocString NAME = FormatAsLink("Hight Temperature Electrolyzer", HighTempElectrolyzerConfig.ID);
                         public static LocString DESC = "Steam goes in one end. Life sustaining oxygen comes out the other.";
                         public static LocString EFFECT = $"Converts {FormatAsLink("Steam", "STEAM")} to {FormatAsLink("Oxygen", "OXYGEN")} " +
                             $"and {FormatAsLink("Hydrogen", "HYDROGEN")}";
-                    }
+                    }*/
                 }
             }
 

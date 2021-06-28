@@ -13,55 +13,116 @@ namespace TagnumElite
 
             private readonly ConduitPortInfo secondaryPort = new ConduitPortInfo(ConduitType.Gas, new CellOffset(0, 1));
 
-            public static AEConfig Config => AdvancedElectrolyzerMod.config.advancedElectrolyzer;
+            public static AEConfig Config => AdvancedElectrolyzersMod.config.advancedElectrolyzer;
 
+            [JsonObject(MemberSerialization.OptIn)]
             public class AEConfig
             {
-                // This is litre per second
+                [PeterHan.PLib.Option("Water Consumption Rate", "This is litre per second")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float waterConsumptionRate = 1f;
+                public float waterConsumptionRate { get; set; }
 
                 // # Clean/Polluted Water #
-                // This is gram per second
+                [PeterHan.PLib.Option("Oxygen Production Rate", "This is gram per second")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float water2OxygenRatio = 0.888f;
-                // This is gram per second
+                public float water2OxygenRatio { get; set; }
+
+                [PeterHan.PLib.Option("Hydrogen Production Rate", "This is gram per second")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float water2HydrogenRatio = 0.111999989f;
+                public float water2HydrogenRatio { get; set; }
+
                 // # Salt Water #
+                [PeterHan.PLib.Option("Salt Water 2 Water Ratio")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float saltWater2WaterRatio = 0.93f;
+                public float saltWater2WaterRatio { get; set; }
+
+                [PeterHan.PLib.Option("Salt Water 2 Salt Ratio")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float saltWater2SaltRatio = 0.07f;
+                public float saltWater2SaltRatio { get; set; }
+
                 // # Brine #
+                [PeterHan.PLib.Option("Brine 2 Water Ratio")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float brine2WaterRatio = 0.7f;
-                [JsonProperty]
-                public float brine2SaltRatio = 0.3f;
+                public float brine2WaterRatio { get; set; }
 
+                [PeterHan.PLib.Option("Brine 2 Salt Ratio")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float salt2BleachStoneRatio = 0.61f;
+                public float brine2SaltRatio { get; set; }
 
+                [PeterHan.PLib.Option("Salt 2 Bleach Stone Ratio")]
+                [PeterHan.PLib.Limit(0, 10000)]
+                [JsonProperty]
+                public float salt2BleachStoneRatio { get; set; }
+
+                [PeterHan.PLib.Option("Oxygen Output Temperature")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty("Minimium Oxygen Temperature")]
-                public float oxygenTemperature = 293.15f;
+                public float oxygenTemperature { get; set; }
+
+                [PeterHan.PLib.Option("Hydrogen Output Temperature")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty("Minimium Hydrogen Temperature")]
-                public float hydrogenTemperature = 293.15f;
+                public float hydrogenTemperature { get; set; }
+
+                [PeterHan.PLib.Option("Heat Exhaust Amount")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty("Exhaust Heat Amount")]
-                public float heatExhaust = 0f;
+                public float heatExhaust { get; set; }
+
+                [PeterHan.PLib.Option("Heat Internal Amount")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty("Self Heat Amount")]
-                public float heatSelf = 4f;
+                public float heatSelf { get; set; }
 
+                [PeterHan.PLib.Option("Energy Consumption")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty("Energy Consumption")]
-                public float energyConsumption = 400f;
-                [JsonProperty("Work Speed Multiplier")]
-                public float workSpeedMultiplier = 1f;
+                public float energyConsumption { get; set; }
 
+                [PeterHan.PLib.Option("Work Speed Multiplier")]
+                [PeterHan.PLib.Limit(0, 10)]
+                [JsonProperty("Work Speed Multiplier")]
+                public float workSpeedMultiplier { get; set; }
+
+                [PeterHan.PLib.Option("Process Brine/Saltwater")]
                 [JsonProperty("Process Brine/Saltwater")]
-                public bool processSaltAndBrine = false;
+                public bool processSaltAndBrine { get; set; }
+
+                [PeterHan.PLib.Option("Require Salt for construction")]
                 [JsonProperty]
-                public bool requireSaltForConstruction = false;
+                public bool requireSaltForConstruction { get; set; }
+
+                [PeterHan.PLib.Option("Required Salt for construction")]
+                [PeterHan.PLib.Limit(0, 10000)]
                 [JsonProperty]
-                public float requiredSaltForConstruction = 50f;
+                public float requiredSaltForConstruction { get; set; }
+
+                public AEConfig() {
+                    waterConsumptionRate = 1f;
+                    water2OxygenRatio = 0.888f;
+                    water2HydrogenRatio = 0.111999989f;
+                    saltWater2WaterRatio = 0.93f;
+                    saltWater2SaltRatio = 0.07f;
+                    brine2WaterRatio = 0.7f;
+                    brine2SaltRatio = 0.3f;
+                    salt2BleachStoneRatio = 0.61f;
+                    oxygenTemperature = 293.15f;
+                    hydrogenTemperature = 293.15f;
+                    heatExhaust = 0f;
+                    heatSelf = 4f;
+                    energyConsumption = 400f;
+                    workSpeedMultiplier = 1f;
+                    processSaltAndBrine = false;
+                    requireSaltForConstruction = false;
+                    requiredSaltForConstruction = 50f;
+                }
             }
 
             public override BuildingDef CreateBuildingDef()
