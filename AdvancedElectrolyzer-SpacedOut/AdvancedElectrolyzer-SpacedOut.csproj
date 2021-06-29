@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\..\lib\0Harmony.dll</HintPath>
+      <HintPath>..\..\..\lib\spaced_out\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
@@ -88,7 +88,8 @@
   <Import Project="..\AdvancedElectrolyzer_Shared\AdvancedElectrolyzer_Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>rd /S /Q "$(TargetDir)"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == Debug ..\..\lib\pdb2mdb.exe" "$(TargetDir)$(TargetFileName)"

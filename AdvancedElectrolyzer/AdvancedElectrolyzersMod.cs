@@ -1,5 +1,5 @@
 ﻿using Database;
-using HarmonyLib;
+using Harmony;
 using KMod;
 using Newtonsoft.Json;
 using System;
@@ -97,8 +97,7 @@ namespace TagnumElite
             }
         }
 
-        [HarmonyPatch(typeof(GeneratedBuildings))]
-        [HarmonyPatch("LoadGeneratedBuildings")]
+        [HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
         internal class GeneratedBuildings_LoadGeneratedBuildings_Patch
         {
             public static void Prefix()
@@ -108,8 +107,7 @@ namespace TagnumElite
             }
         }
 
-        [HarmonyPatch(typeof(Db))]
-        [HarmonyPatch("Initialize")]
+        [HarmonyPatch(typeof(Db), "Initialize")]
         public static class Db_Initialize_Patch
         {
             public static void Postfix()
@@ -149,8 +147,7 @@ namespace TagnumElite
             }
         }
 
-        [HarmonyPatch(typeof(Localization))]
-        [HarmonyPatch("Initialize")]
+        [HarmonyPatch(typeof(Localization), "Initialize")]
         public class Localization_Initialize_Patch
         {
             public static void Postfix() => Translate(typeof(AdvancedElectrolyzersStrings.STRINGS));
