@@ -1,8 +1,7 @@
 ﻿using Database;
-using Harmony;
+using HarmonyLib;
 using KMod;
 using Newtonsoft.Json;
-using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,7 +14,7 @@ namespace TagnumElite
     {
         public static class AdvancedElectrolyzersMod
         {
-            //private static JsonSerializer serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings { Formatting = Formatting.Indented });
+            private static JsonSerializer serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings { Formatting = Formatting.Indented });
 
             public static string mod_loc;
 
@@ -26,7 +25,6 @@ namespace TagnumElite
             {
                 [JsonProperty]
                 public const string version = "2.0.0";
-                [Option("STRINGS.ADVANCEDELECTROLYZERS.OPTIONS.ADV_ELECTROLYZER")]
                 [JsonProperty]
                 public AdvancedElectrolyzerConfig.AEConfig advancedElectrolyzer = new AdvancedElectrolyzerConfig.AEConfig();
             }
@@ -36,17 +34,6 @@ namespace TagnumElite
 #if DEBUG
                 HarmonyInstance.DEBUG = true;
 #endif
-                PUtil.InitLibrary(false);
-                PeterHan.PLib.Options.POptions.RegisterOptions(typeof(Config));
-                Config f_config = PeterHan.PLib.Options.POptions.ReadSettings<Config>();
-                if (f_config == null)
-                {
-                    PeterHan.PLib.Options.POptions.WriteSettings(config);
-                }
-                else {
-                    config = f_config;
-                }
-                /* OLD CODE, we are now using PLib
                 try
                 {
                     System.Reflection.Assembly assem = System.Reflection.Assembly.GetExecutingAssembly();
@@ -87,7 +74,6 @@ namespace TagnumElite
                 {
                     Debug.Log(" === Unable to load config === " + e);
                 }
-                */
             }
 
             [Conditional("DEBUG")]
@@ -111,21 +97,25 @@ namespace TagnumElite
             }
         }
 
-        [HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
+        [HarmonyPatch(typeof(GeneratedBuildings))]
+        [HarmonyPatch("LoadGeneratedBuildings")]
         internal class GeneratedBuildings_LoadGeneratedBuildings_Patch
         {
             public static void Prefix()
             {
                 ModUtil.AddBuildingToPlanScreen("Oxygen", AdvancedElectrolyzerConfig.ID);
+                //ModUtil.AddBuildingToPlanScreen("Oxygen", HighTempElectrolyzerConfig.ID);
             }
         }
 
-        [HarmonyPatch(typeof(Db), "Initialize")]
+        [HarmonyPatch(typeof(Db))]
+        [HarmonyPatch("Initialize")]
         public static class Db_Initialize_Patch
         {
             public static void Postfix()
             {
                 AddBuildingToTechnology("ImprovedOxygen", AdvancedElectrolyzerConfig.ID);
+                //AddBuildingToTechnology("ImprovedOxygen", HighTempElectrolyzerConfig.ID);
             }
 
             /* Shamelessly stolen from SanchozzDeponianin: https://github.com/SanchozzDeponianin/ONIMods/blob/134293b28abf0ec96cf307eb0f8f372eff4e9940/src/lib/Utils.cs#L137-L165 */
@@ -159,7 +149,8 @@ namespace TagnumElite
             }
         }
 
-        [HarmonyPatch(typeof(Localization), "Initialize")]
+        [HarmonyPatch(typeof(Localization))]
+        [HarmonyPatch("Initialize")]
         public class Localization_Initialize_Patch
         {
             public static void Postfix() => Translate(typeof(AdvancedElectrolyzersStrings.STRINGS));

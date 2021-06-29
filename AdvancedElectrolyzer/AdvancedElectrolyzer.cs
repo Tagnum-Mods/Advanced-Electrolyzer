@@ -1,6 +1,5 @@
 ﻿using KSerialization;
 
-
 namespace TagnumElite
 {
     namespace AdvancedElectrolyzer

@@ -11,7 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AdvancedElectrolyzerConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AdvancedElectrolyzerMachine.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)AdvancedElectrolyzersMod.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AdvancedElectrolyzersStrings.cs" />
   </ItemGroup>
 </Project>

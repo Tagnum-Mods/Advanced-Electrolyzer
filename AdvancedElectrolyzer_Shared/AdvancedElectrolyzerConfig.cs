@@ -1,4 +1,7 @@
 ﻿using Newtonsoft.Json;
+#if SPACED_OUT
+using PeterHan.PLib.Options;
+#endif
 using TUNING;
 using UnityEngine;
 
@@ -18,93 +21,128 @@ namespace TagnumElite
             [JsonObject(MemberSerialization.OptIn)]
             public class AEConfig
             {
-                [PeterHan.PLib.Option("Water Consumption Rate", "This is litre per second")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Water Consumption Rate", "This is litre per second")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float waterConsumptionRate { get; set; }
 
                 // # Clean/Polluted Water #
-                [PeterHan.PLib.Option("Oxygen Production Rate", "This is gram per second")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Oxygen Production Rate", "This is gram per second")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float water2OxygenRatio { get; set; }
 
-                [PeterHan.PLib.Option("Hydrogen Production Rate", "This is gram per second")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Hydrogen Production Rate", "This is gram per second")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float water2HydrogenRatio { get; set; }
 
                 // # Salt Water #
-                [PeterHan.PLib.Option("Salt Water 2 Water Ratio")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Salt Water 2 Water Ratio")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float saltWater2WaterRatio { get; set; }
 
-                [PeterHan.PLib.Option("Salt Water 2 Salt Ratio")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Salt Water 2 Salt Ratio")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float saltWater2SaltRatio { get; set; }
 
                 // # Brine #
-                [PeterHan.PLib.Option("Brine 2 Water Ratio")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Brine 2 Water Ratio")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float brine2WaterRatio { get; set; }
 
-                [PeterHan.PLib.Option("Brine 2 Salt Ratio")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Brine 2 Salt Ratio")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float brine2SaltRatio { get; set; }
 
-                [PeterHan.PLib.Option("Salt 2 Bleach Stone Ratio")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Salt 2 Bleach Stone Ratio")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float salt2BleachStoneRatio { get; set; }
 
-                [PeterHan.PLib.Option("Oxygen Output Temperature")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Oxygen Output Temperature")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty("Minimium Oxygen Temperature")]
                 public float oxygenTemperature { get; set; }
 
-                [PeterHan.PLib.Option("Hydrogen Output Temperature")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Hydrogen Output Temperature")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty("Minimium Hydrogen Temperature")]
                 public float hydrogenTemperature { get; set; }
 
-                [PeterHan.PLib.Option("Heat Exhaust Amount")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Heat Exhaust Amount")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty("Exhaust Heat Amount")]
                 public float heatExhaust { get; set; }
 
-                [PeterHan.PLib.Option("Heat Internal Amount")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Heat Internal Amount")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty("Self Heat Amount")]
                 public float heatSelf { get; set; }
 
-                [PeterHan.PLib.Option("Energy Consumption")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Energy Consumption")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty("Energy Consumption")]
                 public float energyConsumption { get; set; }
 
-                [PeterHan.PLib.Option("Work Speed Multiplier")]
-                [PeterHan.PLib.Limit(0, 10)]
+#if SPACED_OUT
+                [Option("Work Speed Multiplier")]
+                [Limit(0, 10)]
+#endif
                 [JsonProperty("Work Speed Multiplier")]
                 public float workSpeedMultiplier { get; set; }
 
-                [PeterHan.PLib.Option("Process Brine/Saltwater")]
+#if SPACED_OUT
+                [Option("Process Brine/Saltwater")]
+#endif
                 [JsonProperty("Process Brine/Saltwater")]
                 public bool processSaltAndBrine { get; set; }
 
-                [PeterHan.PLib.Option("Require Salt for construction")]
+#if SPACED_OUT
+                [Option("Require Salt for construction")]
+#endif
                 [JsonProperty]
                 public bool requireSaltForConstruction { get; set; }
 
-                [PeterHan.PLib.Option("Required Salt for construction")]
-                [PeterHan.PLib.Limit(0, 10000)]
+#if SPACED_OUT
+                [Option("Required Salt for construction")]
+                [Limit(0, 10000)]
+#endif
                 [JsonProperty]
                 public float requiredSaltForConstruction { get; set; }
 
-                public AEConfig() {
+                public AEConfig()
+                {
                     waterConsumptionRate = 1f;
                     water2OxygenRatio = 0.888f;
                     water2HydrogenRatio = 0.111999989f;

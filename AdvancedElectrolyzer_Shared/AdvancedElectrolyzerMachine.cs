@@ -114,7 +114,7 @@ namespace TagnumElite
                 {
                     AdvElectrolyzerInputStatusItem = new StatusItem("ADVANCEDELECTROLYZERINPUT", "BUILDING", string.Empty, StatusItem.IconType.Info, NotificationType.Neutral, allow_multiples: false, OverlayModes.None.ID).SetResolveStringCallback(delegate (string str, object data)
                     {
-                        str = str.Replace("{ElementTypes}", "Important Fluid");
+                        str = str.Replace("{ElementType}", "Important Fluid");
                         str = str.Replace("{FlowRate}", GameUtil.GetFormattedByTag(GameTags.Water, Config.waterConsumptionRate, GameUtil.TimeSlice.PerSecond));
                         return str;
                     });

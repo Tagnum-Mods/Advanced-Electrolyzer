@@ -39,16 +39,16 @@ namespace TagnumElite.AdvancedElectrolyzer
                 {
                     public class ADVANCEDELECTROLYZERINPUT
                     {
-                        public static LocString NAME = "Using {ElementTypes}: {FlowRate}";
+                        public static LocString NAME = "Using {ElementType}: {FlowRate}";
 
-                        public static LocString TOOLTIP = "This building is using {ElementTypes} from storage at a rate of " + FormatAsNegativeRate("{FlowRate}");
+                        public static LocString TOOLTIP = "This building is using {ElementType} from storage at a rate of " + FormatAsNegativeRate("{FlowRate}");
                     }
 
                     public class ADVANCEDELECTROLYZEROUTPUT
                     {
-                        public static LocString NAME = "Emitting {ElementTypes}: {FlowRate}";
+                        public static LocString NAME = "Emitting {ElementType}: {FlowRate}";
 
-                        public static LocString TOOLTIP = "This building is releasing {ElementTypes} at a rate of " + FormatAsPositiveRate("{FlowRate}");
+                        public static LocString TOOLTIP = "This building is releasing {ElementType} at a rate of " + FormatAsPositiveRate("{FlowRate}");
                     }
                 }
             }
